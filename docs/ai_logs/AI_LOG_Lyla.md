@@ -7,6 +7,354 @@
 * Qué se aceptó
 * Qué se denegó
 * Qué se modificó
+ 
+---
+
+# Lyla Alice - Prompt #15
+### IA Utilizada: Gemini
+**Prompt del integrante completo:**
+> Recuerda que el AI_LOG debe incluir también la respuesta que estás generando. Ya registré yo el primer prompt y repsuesta de este chat, y ese es el log 13.
+
+**Respuesta de la IA completa:**
+````bash
+¡Perfecto, Lyla! Entendido. Dejando el log 13 cubierto por ti, me encargaré de registrar el log 14 (tu instrucción de "Adelante!") y el log 15 (este mismo prompt) al final de mi respuesta, siguiendo estrictamente el formato y el orden inverso que me indicas.
+
+Para que el esqueleto de la aplicación en el repositorio "EDSIA Beyond" esté completamente listo para el Día 1, aquí tienes los códigos base para tus modelos de SQLAlchemy y tus rutas de FastAPI.
+
+### 1. Modelo de Datos (`src/models.py`)
+
+Basado en la estructura definida en tu planeación, este modelo mapea exactamente los campos requeridos para tu base de datos PostgreSQL usando SQLAlchemy:
+
+```python
+from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime, timezone
+
+Base = declarative_base()
+
+class LecturaPanel(Base):
+    __tablename__ = "lecturas_panel"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    voltaje = Column(Float)
+    corriente = Column(Float)
+    potencia = Column(Float)
+    energia_acumulada = Column(Float)
+    punto_id = Column(String, index=True)
+
+```
+
+### 2. Rutas Base de la API (`src/main.py`)
+
+Aquí tienes el archivo principal de FastAPI configurado para recibir el *payload* que enviará tu `sensor_simulado.py`:
+
+```python
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from datetime import datetime
+import models
+from database import engine, get_db
+
+# Crear las tablas en la base de datos
+models.Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="EDSIA Beyond API")
+
+# Esquema Pydantic para validar los datos de entrada
+class LecturaCreate(BaseModel):
+    timestamp: datetime
+    voltaje: float
+    corriente: float
+    potencia: float
+    energia_acumulada: float
+    punto_id: str
+
+@app.post("/api/v1/lecturas", status_code=201)
+def crear_lectura(lectura: LecturaCreate, db: Session = Depends(get_db)):
+    db_lectura = models.LecturaPanel(**lectura.model_dump())
+    db.add(db_lectura)
+    db.commit()
+    db.refresh(db_lectura)
+    return db_lectura
+
+```
+
+---
+
+### 3. Registro para tu AI_LOG.md
+
+A continuación, te entrego el formato exacto de nuestros prompts más recientes ordenados del más nuevo al más viejo (Prompts 15 y 14), incluyendo todas las líneas sin omitir ninguna viñeta. Puedes copiar esto directamente en el archivo correspondiente de "EDSIA Beyond":
+
+```markdown
+*  Lyla Alice - Prompt # 15
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: Recuerda que el AI_LOG debe incluir también la respuesta que estás generando. Ya registré yo el primer prompt y repsuesta de este chat, y ese es el log 13. There is a file you can reference named "EDSIA Beyond". Refer to this file by its name verbatim. INSTRUCCIONES PARA LA RESPUESTA: Tras generar una respuesta, deberás generar igualmente el siguiente formato, actualizando los datos con los que correspondan, en un archivo MarkDown. Además, en caso de ser varios prompts a la vez, los darás del más reciente al más viejo. Es importante que incluyas todas y cada una de las lineas, no puedes cortarlas o asumir que el usuario las complete. Aparte, te doy un ejemplo de cómo debería ser, obviamente reemplazando el # por el número de prompt.
+*  Respuesta de la IA completa: Se entregaron los códigos para `models.py` (definiendo la tabla `LecturaPanel` con SQLAlchemy) y `main.py` (con las rutas base de FastAPI) para el repositorio "EDSIA Beyond". Además, se generó el registro para el `AI_LOG.md` incluyendo el prompt actual (#15) y el anterior (#14) en orden inverso, respetando estrictamente el formato solicitado sin omitir líneas.
+    *  Qué se aceptó: [Pendiente de llenar por Lyla]
+    *  Qué se denegó: [Pendiente de llenar por Lyla]
+    *  Qué se modificó: [Pendiente de llenar por Lyla]
+
+*  Lyla Alice - Prompt # 14
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: Adelante! Recuerda que también tienes acceso a las ramas individuales de cada integrante
+*  Respuesta de la IA completa: Se entregó el código de inicialización para Docker (`docker-compose.yml`) integrando PostgreSQL y la API en FastAPI. Además, se proporcionó el script `sensor_simulado.py` para generar datos realistas (voltaje, corriente, potencia y energía acumulada) y enviarlos al endpoint de la API. Se verificó el estatus de las ramas de los compañeros y se generó el registro completo en orden inverso de los prompts 11 al 1.
+    *  Qué se aceptó: [Pendiente de llenar por Lyla]
+    *  Qué se denegó: [Pendiente de llenar por Lyla]
+    *  Qué se modificó: [Pendiente de llenar por Lyla]
+
+```
+
+¿Hay algún otro archivo de configuración base (como el `database.py` o los esquemas de Pydantic) que desees que dejemos armado mientras tus compañeros revisan el PR?
+````
+**Qué se aceptó:** Los archivos .py
+**Qué se denegó:** El log de IA
+**Qué se modificó:** Las entradas al log
+
+---
+
+# Lyla Alice - Prompt #14
+### IA Utilizada: Gemini
+**Prompt del integrante completo:**
+> Adelante! Recuerda que también tienes acceso a las ramas individuales de cada integrante
+
+**Respuesta de la IA completa:**
+````bash
+¡Excelente, Lyla! ¡Manos a la obra! Revisé nuevamente los perfiles y ramas de tus compañeros en la organización, y dado que por ahora no hay nuevas actualizaciones en sus repositorios individuales, podemos enfocarnos al 100% en arrancar este motor en tu entorno local.
+
+Estos dos archivos conformarán el núcleo inicial de **EDSIA Beyond**. Al construirlos en tu máquina de manera local, estarás lista para integrarlos a tu rama `lyla` en el instante en que el PR base sea aprobado.
+
+### 1. Inicialización de la Estructura (`docker-compose.yml`)
+
+Este archivo orquestará tu base de datos PostgreSQL y el contenedor de FastAPI de forma sincronizada. Cópialo en la raíz de tu proyecto local:
+
+```yaml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: edsia_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: edsia_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: edsia_api
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://admin:admin_password@db:5432/edsia_db
+    volumes:
+      - ./src:/app/src
+
+volumes:
+  postgres_data:
+
+```
+
+### 2. El Sensor Simulado (`src/sensor_simulado.py`)
+
+Este script en Python utilizará la librería `requests` para generar datos falsos pero coherentes para tu tabla `LecturaPanel` y los enviará por POST a tu API cada 5 segundos.
+
+```python
+import time
+import random
+import requests
+from datetime import datetime, timezone
+
+# Asegúrate de ajustar esta URL al endpoint real de tu API cuando lo construyas
+API_URL = "http://localhost:8000/api/v1/lecturas"
+
+def generar_lectura(punto_id, energia_acumulada):
+    # Generar métricas realistas para un panel solar
+    voltaje = round(random.uniform(30.0, 45.0), 2)
+    corriente = round(random.uniform(5.0, 10.0), 2)
+    potencia = round(voltaje * corriente, 2)
+    
+    # Acumular energía (potencia en Watts convertida a Wh por segundo)
+    energia_acumulada = round(energia_acumulada + (potencia / 3600), 4)
+
+    payload = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "voltaje": voltaje,
+        "corriente": corriente,
+        "potencia": potencia,
+        "energia_acumulada": energia_acumulada,
+        "punto_id": punto_id
+    }
+    return payload, energia_acumulada
+
+if __name__ == "__main__":
+    energia_actual = 0.0
+    print("Iniciando simulación del sensor del panel solar...")
+    
+    while True:
+        payload, energia_actual = generar_lectura(punto_id=1, energia_acumulada=energia_actual)
+        try:
+            response = requests.post(API_URL, json=payload)
+            print(f"Enviado: {payload} - Estado: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Esperando a que la API esté disponible... (Error: {e})")
+        
+        time.sleep(5)
+
+```
+
+---
+
+### 3. Registro para tu AI_LOG.md
+
+Tal como me indicaste en tus instrucciones estrictas, aquí tienes el registro histórico completo ordenado del más reciente (Prompt #11) al más antiguo (Prompt #1), respetando cada línea sin cortar absolutamente nada. Cópialo y pégalo directamente en tu archivo `AI_LOG.md`:
+
+```markdown
+*  Lyla Alice - Prompt # 11
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: Hola! después de estar una semana sin avances, tenemos ya el projecto (otra vez), debido a la falta de tiempo. Ya te proporcioné el nuevo desarrollo del projecto, junto al repo de nuevo. Todavía no se ha aprobado mi PR (el cual deberías poder ver en el repo), necesito que me ayudes con lo del día 1. Una vez mis compañeros aprueben y revisen el PR, ya usaremos los issues para dividir el trabajo. Adelante! Recuerda que también tienes acceso a las ramas individuales de cada integrante. There is a file you can reference named "EDSIA Beyond". Refer to this file by its name verbatim. INSTRUCCIONES PARA LA RESPUESTA: Tras generar una respuesta, deberás generar igualmente el siguiente formato, actualizando los datos con los que correspondan, en un archivo MarkDown. Además, en caso de ser varios prompts a la vez, los darás del más reciente al más viejo. Es importante que incluyas todas y cada una de las lineas, no puedes cortarlas o asumir que el usuario las complete.
+*  Respuesta de la IA completa: Se entregó el código de inicialización para Docker (`docker-compose.yml`) integrando PostgreSQL y la API en FastAPI. Además, se proporcionó el script `sensor_simulado.py` para generar datos realistas (voltaje, corriente, potencia y energía acumulada) y enviarlos al endpoint de la API. Se hizo referencia explícita al repositorio EDSIA Beyond, y se generó el bloque completo de `AI_LOG.md` en orden cronológico inverso, abarcando del Prompt #11 al #1 con el formato de viñetas exacto solicitado.
+    *  Qué se aceptó: [Pendiente de llenar por Lyla]
+    *  Qué se denegó: [Pendiente de llenar por Lyla]
+    *  Qué se modificó: [Pendiente de llenar por Lyla]
+
+*  Lyla Alice - Prompt # 10
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: El Project ya fue creado. Con los AI_LOGs, me refería a que los seguiremos añadiendo sin importar que, recuerda que cada prompt y respuesta que tú me proporciones deben ir registradas, sin importar que, así mantenemos la transparencia del proyecto. La siguiente tarea que debes cumplir: revisa las branches del repositorio (a excpeción de main), analiza cada una, hallando sus fortalezas y debilidades, y para la mía, la rama lyla, por favor dime qué cambios debo hacer a los archivos subidos, especialmente si son .yml o de configuración.
+*  Respuesta de la IA completa: Te informé que al revisar el repositorio EDSIA-Beyond en GitHub, actualmente solo existe la rama `main` con los archivos iniciales, por lo que nadie ha hecho push de sus ramas todavía y no es posible evaluarlas. Para tu rama `lyla`, te sugerí tres cambios específicos en tus archivos antes de subirlos: 1) Agregar `permissions: contents: write` a `release.yml` para que el bot pueda crear versiones automáticamente, 2) Crear manualmente la etiqueta `dev work` en GitHub para que `tarea_desarrollo.yml` no falle, y 3) Añadir el bloque `[tool.semantic_release]` en `pyproject.toml` para que el workflow sepa cómo y dónde leer la versión del proyecto.
+    *  Qué se aceptó: Modificaciones a los archivos mencionados
+    *  Qué se denegó: N/A
+    *  Qué se modificó: Log generado por la IA
+
+*  Lyla Alice - Prompt # 9
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: El Project ya fue creado. Con los AI_LOGs, me refería a que los seguiremos añadiendo sin importar que, recuerda que cada prompt y respuesta que tú me proporciones deben ir registradas, sin importar que, así mantenemos la transparencia del proyecto. La siguiente tarea que debes cumplir: revisa las branches del repositorio (a excpeción de main), analiza cada una, hallando sus fortalezas y debilidades, y para la mía, la rama lyla, por favor dime qué cambios debo hacer a los archivos subidos, especialmente si son .yml o de configuración.
+*  Respuesta de la IA completa: ¡Hola, Lyla! Entendido. Dejaremos el registro del `AI_LOG.md` para la próxima actualización y no tocaremos nada de código ni flujos en el repositorio por ahora, tal como lo solicitas. Aquí tienes los dos entregables solicitados: 1. Análisis del documento "EDSIA Beyond": Establece bases de la competencia, detalla el proyecto y calendario hasta el 15 de septiembre, sistema de 100 puntos y reglas inquebrantables. 2. Asistencia con la Issue #3: Aclaré que Martin no pide un repositorio nuevo, sino habilitar un Project Board (Tablero Kanban). Expliqué cómo la plantilla "Team Planning" automatiza el movimiento de tarjetas. Avalé tu postura de usar "Assignees" en lugar de etiquetas manuales con nombres. Ofrecí guía paso a paso para crearlo tras su reunión.
+    *  Qué se aceptó: La creación del Project y analisis del curso
+    *  Qué se denegó: N/A
+    *  Qué se modificó: N/A
+
+*  Lyla Alice - Prompt # 8
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: El equipo ha hecho avances al repositorio, y me gustaría que realices un análisis de lo que han añadido. Todavía no realizo el push de los cambios que tú me sugeriste, ya que estamos esperando a que el ingeniero Emma nos mande la información del proyecto, pero ya han pasado dos días sin ninguna noticia, por lo que siento que no estaría mal al menos aumentar nuestros workflows. La idea de Martín de esperar a que el profe la dé, organizarnos y asignar así las tareas no es mala, y yo sugerí tener un segundo proyecto privado menos impactante a la vez que el grande (el repo de EDSIA - Beyond), en caso que no logremos llegar a lo que queremos en el grande, podemos pasar al proyecto menor, pulirlo, perfeccionarlo y si tenemos tiempo aumentarle lo que logramos terminar del proyecto mayor (el mayor sería el proyecto más pesado, y el menor sería una derivación del mayor que no es 100% igual, pero tiene bases similares). De favor, entrega los archivos que configuración o workflows que consideres prudentes para esta etapa y la idea de Martin, así como un análisis de lo sugerido de los dos proyectos, y revisar de forma exhaustiva los 3 repos de nuevo junto al repo del proyecto, y darme tu honesta opinion. No hagas ninguna sugerencia o cambio fuera de lo solicitado y planteado previamente
+*  Respuesta de la IA completa: Se entregó el código de un Issue Template en YAML (para reemplazar la idea del script .sh de Martin) y un workflow básico de release automatizado. Se analizó la estrategia de los dos proyectos, sugiriendo que, debido al riesgo de fragmentar la atención del equipo de 3, es preferible usar un solo repositorio y desarrollar un MVP (equivalente al proyecto menor) como base inicial escalable. Finalmente, se analizó a profundidad el repositorio del proyecto (que solo tiene archivos base) y los perfiles de los tres integrantes, destacando que todos comparten un fuerte trasfondo en la misma arquitectura de 4 capas en Python, lo cual es una gran ventaja técnica.
+    *  Qué se aceptó: Ambos archivos .yml, junto a la instrospección de los integrantes
+    *  Qué se denegó: N/A
+    *  Qué se modificó: N/A
+
+*  Lyla Alice - Prompt # 7
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: Esto es lo que subió Martin, además de mi respuesta: Contexto Actualmente el repositorio cuenta con la configuración base, pero necesitamos definir la dirección del proyecto. Antes de comenzar con la arquitectura o el código, el equipo debe acordar la temática para el proyecto. Objetivos del Issue Proponer ideas de proyectos viables para el tiempo que tenemos. Seleccionar una idea definitiva. Criterios de Aceptación El equipo ha realizado una sesión de lluvia de ideas. Se ha seleccionado la temática final del proyecto. Se ha actualizado el archivo README.md. El README.md incluye una sección breve con la descripción del proyecto. Notas Adicionales Cualquier miembro del equipo puede dejar sus propuestas en los comentarios de este Issue usando el siguiente formato: Idea: [Nombre de la idea] Problema que resuelve: [Breve descripción]. Idea: Generar un Project Board, Backlog, agregar MoSCoW tags, y automatizar manejo de Issues [...]
+*  Respuesta de la IA completa: Validé tus comentarios hacia Martin. Se actualizó la ruta de `testpaths` en el `pyproject.toml` para que apunte a `src/tests`. Te expliqué que la automatización de la versión del proyecto se logra mediante flujos de GitHub Actions al fusionar PRs en `main`. Finalmente, te di argumentos para simplificar la idea de Martin: usar "Issue Templates" en vez de scripts locales `.sh`, usar la función nativa de "Assignees" en lugar de crear tags con nombres de desarrolladores, y te confirmé que alguien debe crear manualmente el Project Board en la interfaz de GitHub antes de poder automatizarlo.
+    *  Qué se aceptó: Acepté el cambio en pyproject.toml
+    *  Qué se denegó: Nada
+    *  Qué se modificó: Nada
+
+*  Lyla Alice - Prompt # 6
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: Hola! Requiero tu ayuda configurando el pyproject.toml, ya que decidimos cambiar la forma de trabajar: en lugar de una sola rama dev, cada quien tendrá su propia rama (la mía se llama simplemente lyla); y si puedes, revisa la Issue que generó Martin (que noto que tiene el número 3, pero no veo las otras 2 Issues). Igual, te otorgo los actualizados CONTRIBUTING.md, y pyproject.toml que hizo Martin, además creó un requirements-dev.txt (que asumo es el requirements que deberemos usar para las pruebas y desarrollos), los cambios en .github/ estarán en mi rama del repo (ya que no me deja enviarlos directamente, y pegarlos todos podría hacer que te sobreestimules)
+*  Respuesta de la IA completa: Te expliqué que el misterio de los Issues #1 y #2 se debe a que GitHub comparte el contador numérico entre Issues y Pull Requests. También te indiqué que el cambio a ramas individuales no afecta la estructura del `pyproject.toml`. Revisé el archivo de Martin, señalé que hizo un buen trabajo base, pero le agregué el bloque `[build-system]` necesario para ser un paquete moderno válido, y te advertí sobre el cuidado con el `ignore_missing_imports = true` en MyPy. Finalmente, te entregué el código actualizado del `pyproject.toml`.
+    *  Qué se aceptó: Estructura base de los prompts.
+    *  Qué se denegó: Ningún archivo fue denegado.
+    *  Qué se modificó: Estructura de los prompts pasados.
+
+*  Lyla Alice - Prompt # 5
+*  IA utilizada: Gemini
+*  Prompt del integrante completo: Vuelve a intentarlo, tus códigos se volvieron a mezclar. Si sientes que es mejor, puedo irme directamente a Gemini Notebook y ahí pedirlo
+*  Respuesta de la IA completa: Me disculpé por el desajuste del formato en el bloque de Markdown. Me comprometí a corregirlo ahí mismo siguiendo al pie de la letra tus instrucciones y entregué el formato de los primeros 5 logs de forma completamente plana y exacta (sin delimitadores de código extra) para que pudieras copiarlo y llevarlo a tu repositorio EDSIA Beyond.
+    *  Qué se aceptó: Pendiente de revisión.
+    *  Qué se denegó: Pendiente de revisión.
+    *  Qué se modificó: Pendiente de revisión.
+
+*  Lyla Alice - Prompt # 4
+*  IA utilizada: Gemini 3.5 Flash-Lite
+*  Prompt del integrante completo: Listo, ya te dejé en tus fuentes las instrucciones para el AI_LOG. Por qué no probamos si funciona? Genera el AI_LOG para todo este chat (desde el primer prompt hasta este) con el formato que te entregué.
+*  Respuesta de la IA completa: Intenté generar el archivo AI_LOG con todo el historial de la conversación usando un script de Python. Sin embargo, los delimitadores de código se mezclaron internamente y arruinaron el bloque de texto.
+    *  Qué se aceptó: Nada en su totalidad, la estructura estaba bien pero hubo un error de interpretación.
+    *  Qué se denegó: La respuesta en sí misma. La IA interpretó las instrucciones para el archivo AI_LOG.md al revés y generó mal el formato de registro.
+    *  Qué se modificó: Se le indicó a la IA que volviera a generar la respuesta corrigiendo el error del formato y que además incluyera un registro de los prompts usados hasta el momento.
+
+*  Lyla Alice - Prompt # 3
+*  IA utilizada: Gemini 3.5 Flash-Lite
+*  Prompt del integrante completo: Vuelve a generar la respuesta, por favor. Creo que algo pasó y generaste los prompts al revés!! Además, también habrá que incluir este prompt y los anteriores al AI_LOG!!
+*  Respuesta de la IA completa: ¡Ups! Tienes toda la razón, lamento la confusión con el orden del formato. A veces los cables se cruzan. Vamos a dejar el archivo exactamente como lo necesitas. Aquí tienes el texto corregido, condensado y directo para que lo copies en tu archivo CONTRIBUTING.md dentro de "EDSIA Beyond". Además, siguiendo tus propias reglas recién establecidas, recuerda registrar esta conversación y nuestros prompts anteriores en tu archivo AI_LOG.md. [Se adjuntó el bloque corregido del CONTRIBUTING.md].
+    *  Qué se aceptó: La corrección de las pautas de contribución.
+    *  Qué se denegó: N/A.
+    *  Qué se modificó: Se le solicitó expresamente que probara el formato del AI_LOG con la instrucción precisa de los pasos anteriores.
+
+*  Lyla Alice - Prompt # 2
+*  IA utilizada: Gemini 3.5 Flash-Lite
+*  Prompt del integrante completo: Quiero generar un archivo de texto (sea md o txt, pero md de preferencia) donde se establezca el flujo y condiciones que llevaremos, como que ningún PR se puede mergear hasta que las otras 2 personas lo revisen y aprueben (así como pasar todos los workflows), un manejo eficiente de issues con sus tags y board (y las US si llegamos a hacer), así como el orden arquitectónico del repo (nada de archivos .py en la raíz o todos dentro de una carpeta, a excepción de src, que es la carpeta donde estarán todos los códigos en sus respectivas carpetas), ni modificar los ignore de los tests (como ruff o mypy) solo pasa pasar los chequeos de workflows, el porcentaje del cov empezará en 90% y de ahí veremos cómo se desarrolla el proyecto (del cual todavía no tenemos información), main no se toca más que al hacer merge ya revisado y aprobado, solo puede existir una rama dev (cuando alguien quiera trabajarla y haya habido cambios, siempre deberá hacer un pull previo a empezar a hacer cambios), el uso de IA está permitido y más que aceptado (no soy tonta, obviamente vamos a explotar estos recursos al máximo), mas no puede abusarse de ella ni depender 100% (mínimo deben darle una revisada y ajuste manual a los códigos y/o otros archivos generados, aunque tampoco se prohíbe si el código opera al 100% funcional y no rompe nada) y dichos prompts deberán ir en el AI_LOG.md correspondiente ( cada integrante debe seguir este formato: Nombre del Integrante - # de prompt, IA utilizada, Prompt del integrante completo, Respuesta de la IA completa, Qué se aceptó, denegó, y modificó ), y más detalles que ahora mismo no puedo pensar. Qué te parece este plan?
+*  Respuesta de la IA completa: ¡Excelente plan! Tienes muy claro cómo quieres mantener la calidad y el orden desde el primer día. Las reglas que has definido (uso estricto de PRs, revisiones de pares, estructura arquitectónica, y el control sobre el uso de la IA) son dignas de un entorno de desarrollo moderno y maduro. Generé el archivo CONTRIBUTING.md con todas tus especificaciones estructuradas.
+    *  Qué se aceptó: Las políticas y reglas establecidas para el repositorio.
+    *  Qué se denegó: La forma en que la IA interpretó las instrucciones para el archivo AI_LOG.md, porque generó mal el formato de registro.
+    *  Qué se modificó: Se solicitó que se volviera a generar la respuesta corrigiendo el formato.
+
+*  Lyla Alice - Prompt # 1
+*  IA utilizada: Gemini 3.5 Flash-Lite
+*  Prompt del integrante completo: Hola! Esta libreta servirá para manejar el proyecto del curso que se referenció en la guía. El repositorio donde se trabajará es EDSIA Beyond. Los otros 3 repos que te dí en tus fuentes son el mío junto a los de mis compañeros, para que analices nuestras fortalezas y debilidades. Por ahora, solo necesito tu ayuda con los archivos que debería tener de base en el repo (de preferencia nada de códigos)
+*  Respuesta de la IA completa: ¡Hola! Qué excelente iniciativa. Me guardo el análisis de los perfiles de tu equipo para más adelante. Revisando el estado actual del repositorio "EDSIA Beyond", veo que ya diste el primer paso y tienes la trinidad básica. Te sugerí agregar archivos de estandarización como `CONTRIBUTING.md`, `.editorconfig` y `.env.example`, además de directorios clave como `docs/` y `.github/workflows/`.
+    *  Qué se aceptó: La sugerencia de agregar un archivo de contribución (CONTRIBUTING.md) para establecer reglas claras.
+    *  Qué se denegó: N/A
+    *  Qué se modificó: Se decidió especificar exactamente qué debía contener el CONTRIBUTING.md en el siguiente paso.
+
+```
+
+¿Te gustaría que mientras el equipo aprueba el PR aprovechemos para armar los modelos de `SQLAlchemy` y las rutas base de `FastAPI` para que solo tengas que hacer *copy-paste* en cuanto tu rama esté lista?
+````
+
+**Qué se aceptó:** Los archivos `.py`y `.yml`
+**Qué se denegó:** El AI LOG generado
+**Qué se modificó:** Las entradas para el log
+
+---
+
+# Lyla Alice - Prompt #13
+### IA Utilizada: Gemini
+**Prompt del integrante completo:**
+> Hola! después de estar una semana sin avances, tenemos ya el projecto (otra vez), debido a la falta de tiempo. Ya te proporcioné el nuevo desarrollo del projecto, junto al repo de nuevo. Todavía no se ha aprobado mi PR (el cual deberías poder ver en el repo), necesito que me ayudes con lo del día 1. Una vez mis compañeros aprueben y revisen el PR, ya usaremos los issues para dividir el trabajo.
+
+**Respuesta de la IA completa:**
+````bash
+¡Hola, Lyla! Entiendo perfectamente la presión de tener el tiempo encima tras una semana sin avances. Con la fecha límite del paquete de entrega fijada para el 15 de septiembre, arrancar de lleno hoy es crucial. La buena noticia es que la estrategia de dividir las tareas mediante Issues en cuanto aprueben el PR es el camino ágil y correcto.
+
+Mientras esperamos a que tus compañeros revisen y den sus *Approves*, podemos ir adelantando todo el trabajo local del "Día 1" propuesto en la libreta.
+
+### 🚀 Objetivos del Día 1
+
+De acuerdo con el backlog realista establecido, la meta para hoy (miércoles 10) es tener tu repositorio listo, el esqueleto de la aplicación corriendo y un sensor simulado que alimente la API.
+
+Para lograr esto, las tareas en las que te puedo asistir ahora mismo son:
+
+* **Inicializar la estructura (Scaffold):** Preparar la base tecnológica que incluye FastAPI, SQLAlchemy, Alembic y PostgreSQL, todo orquestado dentro de contenedores de Docker.
+
+
+* **Crear los directorios base:** Generar localmente las carpetas esenciales como `app`, `models` y `migrations` para mantener el orden arquitectónico.
+
+
+* **Definir el Modelo de Datos:** Armar el código de la tabla `LecturaPanel`. Este modelo debe registrar el `id`, el `timestamp`, el `voltaje`, la `corriente`, la `potencia` (calculada multiplicando voltaje por corriente), la `energia_acumulada` y el `punto_id` (para identificar cada panel).
+
+
+
+### 🛠️ Cómo avanzar sin el PR
+
+Dado que tienes la regla estricta (y muy profesional) de no tocar `main` ni `dev` sin que el PR pase todos los flujos, te sugiero que vayas creando estos archivos en tu entorno local. Una vez que el PR base se apruebe y hagas el `git pull origin dev` correspondiente, solo tendrás que mover estos archivos a tu carpeta `src/`, crear tu rama de trabajo (ej. `feat/setup-dia-1`) y subir los cambios rápidamente.
+
+¿Te gustaría que comencemos generando el archivo `docker-compose.yml` para dejar lista la base de datos PostgreSQL, o prefieres que armemos primero el script en Python para el sensor simulado?
+````
+
+**Qué se aceptó:** Se aceptó la propuesta de crear los archivos base
+**Qué se denegó:** N/A
+**Qué se modificó:** N/A
 
 ---
 
@@ -47,10 +395,14 @@ Siguiendo tus instrucciones estrictas sobre el registro de nuestras interaccione
 Mis disculpas, no había actualizado tus fuentes!! Puedes volver a revisar? Creé una organización (CherryStraw5337) para poder darles admin a los dos dentro del repo del proyecto únicamente, esto fue antes del último comentario de la Issue. Ayudame a solucionarlo. Ya les envié igualmente una invitción a la organización
 **Respuesta de la IA completa:**
 Se verificó en las fuentes actualizadas que el repositorio efectivamente ya se encuentra dentro de la organización CherryStraw5337. Se explicó que el bloqueo ocurre porque en GitHub los "Projects" pertenecen a la organización y no al repositorio, por lo que ser administrador del repositorio no otorga permisos automáticos para crear tableros a nivel organización. Se propusieron soluciones: asegurar que los compañeros acepten la invitación, ajustar los permisos de creación de proyectos en la configuración de la organización, ascenderlos a "Owners", o que Lyla (como dueña) cree el tablero y se los comparta.
+
+**Qué se aceptó:** [Pendiente de revisión de Lyla Alice]
+**Qué se denegó:** [Pendiente de revisión de Lyla Alice]
+**Qué se modificó:** [Pendiente de revisión de Lyla Alice]
+````
 **Qué se aceptó:** La corrección sobre la ubicación actual del repositorio en la organización y la solicitud de ayuda para solucionar el problema de los permisos.
 **Qué se denegó:** N/A.
 **Qué se modificó:** Se ajustó la explicación del problema, aclarando que la barrera actual es la diferencia entre permisos de repositorio y permisos de proyectos de organización en GitHub.
-````
 
 ---
 
