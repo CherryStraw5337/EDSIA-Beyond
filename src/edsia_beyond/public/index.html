@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDSIA-BEYOND - Dashboard Solar en Tiempo Real</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="h-full flex flex-col overflow-hidden text-slate-200 antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between transition-all duration-300 z-30 flex-shrink-0">
+            <div>
+                <!-- Logo -->
+                <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-amber-500/20">
+                        <i class="fa-solid fa-sun"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg text-white leading-none tracking-tight">EDSIA<span class="text-amber-500">-BEYOND</span></h1>
+                        <p class="text-xs text-slate-400 mt-1">Monitor Solar v1.0</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                        <i class="fa-solid fa-chart-line w-5 text-center"></i>
+                        <span>Dashboard</span>
+                    </button>
+
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all">
+                        <i class="fa-solid fa-chart-bar w-5 text-center"></i>
+                        <span>Análisis</span>
+                    </button>
+
+                    <button onclick="switchTab('alerts')" id="nav-alerts" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all">
+                        <i class="fa-solid fa-triangle-exclamation w-5 text-center"></i>
+                        <span>Alertas</span>
+                        <span id="alert-badge" class="ml-auto bg-red-500/20 text-red-400 font-semibold text-xs px-2 py-0.5 rounded-full border border-red-500/30">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- WebSocket Status -->
+            <div class="p-4 m-3 bg-slate-950/80 rounded-xl border border-slate-800/80">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-400">WebSocket</span>
+                    <span id="ws-status-badge" class="flex items-center gap-1.5 text-xs font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20">
+                        <span class="ws-indicator ws-disconnected"></span>
+                        Desconectado
+                    </span>
+                </div>
+                <p id="ws-url-text" class="text-[11px] text-slate-500 font-mono truncate">ws://localhost:8000/ws/</p>
+                <div class="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+                    <span>Mensajes:</span>
+                    <span id="ws-message-count" class="font-medium text-slate-300">0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
+
+            <!-- Header -->
+            <header class="h-16 bg-slate-900/80 backdrop-blur border-b border-slate-800 px-6 flex items-center justify-between z-20">
+                <div class="flex items-center gap-4">
+                    <h2 id="page-title" class="text-lg font-bold text-white tracking-wide">Dashboard en Vivo</h2>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Panel Selector -->
+                    <select id="panel-selector" onchange="selectPanel(this.value)" class="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 hover:border-amber-500 focus:outline-none focus:border-amber-500 transition-all">
+                        <option value="">Seleccionar Panel...</option>
+                    </select>
+
+                    <!-- Manual Refresh -->
+                    <button onclick="fetchPanelData()" class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded-lg transition-all" title="Actualizar">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+
+                    <!-- Export -->
+                    <button onclick="exportDataCSV()" class="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all" title="Descargar CSV">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto p-6 space-y-6">
+
+                <!-- Dashboard Tab -->
+                <div id="tab-dashboard" class="tab-content space-y-6">
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                        <!-- Voltaje Actual -->
+                        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800/80 shadow-lg">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Voltaje Actual</span>
+                                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
+                                    <i class="fa-solid fa-bolt"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <span id="kpi-voltage" class="text-2xl font-bold text-white tracking-tight">--</span>
+                                <span class="text-xs font-medium text-slate-400">V</span>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-400">
+                                <span>Máx: <strong id="kpi-voltage-max" class="text-slate-200">--</strong> V</span>
+                            </div>
+                        </div>
+
+                        <!-- Corriente Actual -->
+                        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800/80 shadow-lg">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Corriente</span>
+                                <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-sm">
+                                    <i class="fa-solid fa-plug"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <span id="kpi-current" class="text-2xl font-bold text-white tracking-tight">--</span>
+                                <span class="text-xs font-medium text-slate-400">A</span>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-400">
+                                <span>Promedio: <strong id="kpi-current-avg" class="text-slate-200">--</strong> A</span>
+                            </div>
+                        </div>
+
+                        <!-- Energía Hoy -->
+                        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800/80 shadow-lg">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Energía Hoy</span>
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
+                                    <i class="fa-solid fa-charging-station"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-baseline gap-2">
+                                <span id="kpi-energy" class="text-2xl font-bold text-emerald-400 tracking-tight">--</span>
+                                <span class="text-xs font-medium text-slate-400">kWh</span>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-400">
+                                <span>Eficiencia: <strong id="kpi-efficiency" class="text-slate-200">--%</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Última Actualización -->
+                        <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800/80 shadow-lg">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Último Update</span>
+                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-sm">
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="text-lg font-bold text-indigo-400 tracking-tight">
+                                <span id="kpi-last-update">--</span>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-400">
+                                <span id="kpi-last-update-ago">hace -- segundos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                        <!-- Potencia en Tiempo Real -->
+                        <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800/80 shadow-xl">
+                            <div class="mb-4">
+                                <h3 class="font-bold text-white text-base">Potencia Instantánea (Últimas 1h)</h3>
+                                <p class="text-xs text-slate-400">Voltaje × Corriente en tiempo real</p>
+                            </div>
+                            <div class="h-[280px] relative">
+                                <canvas id="powerChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Energía Acumulada -->
+                        <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800/80 shadow-xl">
+                            <div class="mb-4">
+                                <h3 class="font-bold text-white text-base">Energía Acumulada (Últimas 24h)</h3>
+                                <p class="text-xs text-slate-400">kWh acumulados por hora</p>
+                            </div>
+                            <div class="h-[280px] relative">
+                                <canvas id="energyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Readings Table -->
+                    <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800/80 shadow-xl">
+                        <div class="mb-4">
+                            <h3 class="font-bold text-white text-base">Últimas Lecturas</h3>
+                            <p class="text-xs text-slate-400">Historial paginado de mediciones</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-slate-400 uppercase font-semibold">
+                                        <th class="pb-3 px-4">Timestamp</th>
+                                        <th class="pb-3 px-4">Voltaje (V)</th>
+                                        <th class="pb-3 px-4">Corriente (A)</th>
+                                        <th class="pb-3 px-4">Potencia (W)</th>
+                                        <th class="pb-3 px-4">Eficiencia (%)</th>
+                                        <th class="pb-3 px-4">Anomalía</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="readings-table-body" class="divide-y divide-slate-800/60">
+                                    <!-- JS populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="tab-analytics" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800/80 shadow-xl">
+                        <div class="mb-4">
+                            <h3 class="font-bold text-white text-base">Histórico de Energía (Últimos 30 días)</h3>
+                            <p class="text-xs text-slate-400">Comparativa de producción diaria</p>
+                        </div>
+                        <div class="h-[300px] relative">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Tab -->
+                <div id="tab-alerts" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800/80 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-bold text-white text-base">Historial de Anomalías</h3>
+                                <p class="text-xs text-slate-400">Detecciones automáticas de bajo rendimiento</p>
+                            </div>
+                            <button onclick="clearAlerts()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-all">
+                                Limpiar
+                            </button>
+                        </div>
+                        <div id="alerts-container" class="space-y-3">
+                            <p class="text-xs text-slate-400 text-center py-8">Sin anomalías detectadas</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- JavaScript -->
+    <script>
+        // App State
+        const state = {
+            activeTab: 'dashboard',
+            selectedPanel: null,
+            wsConnected: false,
+            wsMessageCount: 0,
+            wsUrl: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/`,
+
+            // Data buffers for charts
+            timeBuffer: [],      // Últimas 60 timestamps
+            powerBuffer: [],     // Potencia en watts
+            energyBuffer: [],    // Energía acumulada en kWh
+            readingsBuffer: [],  // Últimas lecturas completas
+            anomalies: [],       // Detectadas anomalías
+
+            // Chart instances
+            charts: {}
+        };
+
+        // WebSocket Connection
+        let ws = null;
+
+        function connectWebSocket() {
+            try {
+                ws = new WebSocket(state.wsUrl);
+
+                ws.onopen = () => {
+                    state.wsConnected = true;
+                    updateWSStatus(true);
+                    showToast('Conectado a servidor en tiempo real', 'success');
+                    console.log('WebSocket conectado:', state.wsUrl);
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        state.wsMessageCount++;
+                        document.getElementById('ws-message-count').innerText = state.wsMessageCount;
+
+                        if (data.tipo === 'lectura_nueva') {
+                            handleNewReading(data);
+                        } else if (data.tipo === 'anomalia') {
+                            handleAnomaly(data);
+                        }
+                    } catch (e) {
+                        console.error('Error al parsear WebSocket:', e);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateWSStatus(false);
+                };
+
+                ws.onclose = () => {
+                    state.wsConnected = false;
+                    updateWSStatus(false);
+                    console.log('WebSocket desconectado');
+                    // Reconectar en 3 segundos
+                    setTimeout(() => connectWebSocket(), 3000);
+                };
+            } catch (e) {
+                console.error('Error conectando WebSocket:', e);
+                updateWSStatus(false);
+            }
+        }
+
+        function updateWSStatus(connected) {
+            const badge = document.getElementById('ws-status-badge');
+            const indicator = badge.querySelector('.ws-indicator');
+
+            if (connected) {
+                badge.className = 'flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20';
+                badge.innerHTML = '<span class="ws-indicator ws-connected"></span> Conectado';
+                indicator.className = 'ws-indicator ws-connected';
+            } else {
+                badge.className = 'flex items-center gap-1.5 text-xs font-medium text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full border border-red-500/20';
+                badge.innerHTML = '<span class="ws-indicator ws-disconnected"></span> Desconectado';
+                indicator.className = 'ws-indicator ws-disconnected';
+            }
+        }
+
+        // Handle new reading from WebSocket
+        function handleNewReading(data) {
+            if (state.selectedPanel && data.panel_code !== state.selectedPanel) {
+                return; // Ignore readings from other panels
+            }
+
+            const reading = {
+                timestamp: data.timestamp,
+                voltaje: data.voltaje,
+                corriente: data.corriente,
+                potencia: data.potencia,
+                eficiencia_pct: calculateEfficiency(data.potencia, 5000), // Asumir max 5kW
+                anomalia: data.anomalia
+            };
+
+            // Add to buffers (max 60 for charts)
+            state.timeBuffer.push(new Date(data.timestamp).toLocaleTimeString());
+            state.powerBuffer.push(data.potencia);
+            state.energyBuffer.push(data.potencia * (1/12)); // Asumir 5min intervals = 1/12 hora
+
+            if (state.timeBuffer.length > 60) {
+                state.timeBuffer.shift();
+                state.powerBuffer.shift();
+                state.energyBuffer.shift();
+            }
+
+            state.readingsBuffer.unshift(reading);
+            if (state.readingsBuffer.length > 20) {
+                state.readingsBuffer.pop();
+            }
+
+            // Update KPIs
+            document.getElementById('kpi-voltage').innerText = reading.voltaje.toFixed(2);
+            document.getElementById('kpi-current').innerText = reading.corriente.toFixed(2);
+            document.getElementById('kpi-last-update').innerText = new Date(data.timestamp).toLocaleTimeString();
+
+            updateCharts();
+            renderReadingsTable();
+        }
+
+        // Handle anomaly alert
+        function handleAnomaly(data) {
+            const anomaly = {
+                timestamp: data.timestamp,
+                panel_code: data.panel_code,
+                tipo: data.tipo,
+                esperado_w: data.esperado_w,
+                actual_w: data.actual_w,
+                mensaje: data.mensaje
+            };
+
+            state.anomalies.unshift(anomaly);
+            if (state.anomalies.length > 10) {
+                state.anomalies.pop();
+            }
+
+            document.getElementById('alert-badge').innerText = state.anomalies.length;
+            renderAlertsTable();
+            showToast(`⚠️ Anomalía: ${data.mensaje}`, 'error');
+        }
+
+        // Calculate efficiency percentage
+        function calculateEfficiency(potencia, maxPotencia) {
+            return Math.min(100, (potencia / maxPotencia) * 100);
+        }
+
+        // Fetch initial panel list
+        async function fetchPanels() {
+            try {
+                const response = await fetch('/api/v1/paneles');
+                if (response.ok) {
+                    const panels = await response.json();
+                    populatePanelSelector(panels);
+                    if (panels.length > 0) {
+                        selectPanel(panels[0].code);
+                    }
+                }
+            } catch (e) {
+                console.error('Error fetching panels:', e);
+                showToast('Error cargando paneles', 'error');
+            }
+        }
+
+        function populatePanelSelector(panels) {
+            const selector = document.getElementById('panel-selector');
+            selector.innerHTML = '<option value="">Seleccionar Panel...</option>';
+            panels.forEach(panel => {
+                const option = document.createElement('option');
+                option.value = panel.code;
+                option.innerText = `${panel.nombre} (${panel.code})`;
+                selector.appendChild(option);
+            });
+        }
+
+        // Select panel and fetch its stats
+        async function selectPanel(code) {
+            if (!code) return;
+
+            state.selectedPanel = code;
+            state.timeBuffer = [];
+            state.powerBuffer = [];
+            state.energyBuffer = [];
+            state.readingsBuffer = [];
+            state.anomalies = [];
+
+            document.getElementById('alert-badge').innerText = '0';
+
+            try {
+                // Fetch today's stats
+                const todayResponse = await fetch(`/api/v1/paneles/${code}/estadisticas/hoy`);
+                if (todayResponse.ok) {
+                    const today = await todayResponse.json();
+                    document.getElementById('kpi-energy').innerText = today.energia_kwh.toFixed(2);
+                    document.getElementById('kpi-efficiency').innerText = `${(today.potencia_pico_w / 5000 * 100).toFixed(1)}%`;
+                }
+
+                // Fetch recent readings
+                const readingsResponse = await fetch(`/api/v1/paneles/${code}/lecturas?skip=0&limit=20`);
+                if (readingsResponse.ok) {
+                    const result = await readingsResponse.json();
+                    state.readingsBuffer = result.items.map(r => ({
+                        timestamp: r.created_at,
+                        voltaje: r.voltaje,
+                        corriente: r.corriente,
+                        potencia: r.voltaje * r.corriente,
+                        eficiencia_pct: calculateEfficiency(r.voltaje * r.corriente, 5000),
+                        anomalia: null
+                    })).reverse();
+                    renderReadingsTable();
+                }
+
+                showToast(`Panel ${code} seleccionado`, 'success');
+            } catch (e) {
+                console.error('Error fetching panel data:', e);
+                showToast('Error cargando datos del panel', 'error');
+            }
+        }
+
+        function fetchPanelData() {
+            if (state.selectedPanel) {
+                selectPanel(state.selectedPanel);
+            } else {
+                fetchPanels();
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all';
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all bg-amber-500/10 text-amber-400 border border-amber-500/30';
+            }
+
+            const titles = {
+                'dashboard': 'Dashboard en Vivo',
+                'analytics': 'Análisis de Rendimiento',
+                'alerts': 'Alertas y Anomalías'
+            };
+            document.getElementById('page-title').innerText = titles[tabId] || 'Dashboard';
+
+            // Redibuja gráficas
+            setTimeout(() => {
+                Object.values(state.charts).forEach(chart => {
+                    if (chart) chart.resize();
+                });
+            }, 100);
+        }
+
+        // Initialize Charts
+        function initCharts() {
+            const ctxPower = document.getElementById('powerChart').getContext('2d');
+            state.charts.power = new Chart(ctxPower, {
+                type: 'line',
+                data: {
+                    labels: state.timeBuffer,
+                    datasets: [{
+                        label: 'Potencia (W)',
+                        data: state.powerBuffer,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#f59e0b' } }
+                    }
+                }
+            });
+
+            const ctxEnergy = document.getElementById('energyChart').getContext('2d');
+            state.charts.energy = new Chart(ctxEnergy, {
+                type: 'bar',
+                data: {
+                    labels: state.timeBuffer,
+                    datasets: [{
+                        label: 'Energía (kWh)',
+                        data: state.energyBuffer.map((v, i) => state.energyBuffer.slice(0, i + 1).reduce((a, b) => a + b, 0)),
+                        backgroundColor: '#10b981',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#10b981' } }
+                    }
+                }
+            });
+
+            const ctxHistory = document.getElementById('historyChart').getContext('2d');
+            state.charts.history = new Chart(ctxHistory, {
+                type: 'bar',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'kWh',
+                        data: [28.4, 31.2, 29.8, 22.1, 33.5, 30.1, 24.8],
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (state.charts.power) {
+                state.charts.power.data.labels = state.timeBuffer;
+                state.charts.power.data.datasets[0].data = state.powerBuffer;
+                state.charts.power.update('none');
+            }
+
+            if (state.charts.energy) {
+                state.charts.energy.data.labels = state.timeBuffer;
+                state.charts.energy.data.datasets[0].data = state.energyBuffer.map((v, i) =>
+                    state.energyBuffer.slice(0, i + 1).reduce((a, b) => a + b, 0)
+                );
+                state.charts.energy.update('none');
+            }
+        }
+
+        function renderReadingsTable() {
+            const tbody = document.getElementById('readings-table-body');
+            tbody.innerHTML = state.readingsBuffer.map(r => `
+                <tr class="hover:bg-slate-800/30 transition-all">
+                    <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">${new Date(r.timestamp).toLocaleTimeString()}</td>
+                    <td class="py-3 px-4 font-semibold text-amber-400">${r.voltaje.toFixed(2)}</td>
+                    <td class="py-3 px-4 font-semibold text-cyan-400">${r.corriente.toFixed(2)}</td>
+                    <td class="py-3 px-4 font-semibold text-white">${r.potencia.toFixed(0)}</td>
+                    <td class="py-3 px-4 font-semibold text-emerald-400">${r.eficiencia_pct.toFixed(1)}</td>
+                    <td class="py-3 px-4">
+                        ${r.anomalia ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/10 text-red-400 border border-red-500/30">⚠️ ${r.anomalia.tipo}</span>` : '<span class="text-slate-500">—</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAlertsTable() {
+            const container = document.getElementById('alerts-container');
+            if (state.anomalies.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 text-center py-8">Sin anomalías detectadas</p>';
+                return;
+            }
+
+            container.innerHTML = state.anomalies.map(a => `
+                <div class="p-4 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start justify-between">
+                    <div>
+                        <p class="font-semibold text-red-400 text-sm">${a.tipo}</p>
+                        <p class="text-xs text-slate-300 mt-1">${a.mensaje}</p>
+                        <p class="text-[11px] text-slate-500 mt-2">Esperado: ${a.esperado_w.toFixed(0)}W | Actual: ${a.actual_w.toFixed(0)}W</p>
+                    </div>
+                    <span class="text-[11px] text-slate-500 font-mono whitespace-nowrap ml-4">${new Date(a.timestamp).toLocaleTimeString()}</span>
+                </div>
+            `).join('');
+        }
+
+        function clearAlerts() {
+            state.anomalies = [];
+            document.getElementById('alert-badge').innerText = '0';
+            renderAlertsTable();
+            showToast('Alertas limpiadas', 'info');
+        }
+
+        function exportDataCSV() {
+            if (!state.selectedPanel) {
+                showToast('Selecciona un panel primero', 'error');
+                return;
+            }
+
+            let csv = 'Timestamp,Voltaje (V),Corriente (A),Potencia (W),Eficiencia (%)\n';
+            state.readingsBuffer.forEach(r => {
+                csv += `${new Date(r.timestamp).toISOString()},${r.voltaje.toFixed(2)},${r.corriente.toFixed(2)},${r.potencia.toFixed(0)},${r.eficiencia_pct.toFixed(1)}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `panel_${state.selectedPanel}_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showToast('CSV descargado', 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-900/90 border-emerald-500 text-emerald-200' :
+                            type === 'error' ? 'bg-red-900/90 border-red-500 text-red-200' :
+                            'bg-slate-800/90 border-slate-700 text-slate-200';
+
+            toast.className = `px-4 py-2.5 rounded-xl border shadow-xl text-xs font-medium backdrop-blur pointer-events-auto transition-all transform ${bgClass}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            initCharts();
+            fetchPanels();
+            connectWebSocket();
+            document.getElementById('ws-url-text').innerText = state.wsUrl;
+        });
+
+        // Update "hace X segundos"
+        setInterval(() => {
+            if (state.readingsBuffer.length > 0) {
+                const lastReading = new Date(state.readingsBuffer[0].timestamp);
+                const diff = Math.floor((new Date() - lastReading) / 1000);
+                document.getElementById('kpi-last-update-ago').innerText = `hace ${diff} segundos`;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
