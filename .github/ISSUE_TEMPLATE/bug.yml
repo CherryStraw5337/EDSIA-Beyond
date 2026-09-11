@@ -1,0 +1,50 @@
+name: Bug Report
+description: Encontraste un error, bug, o algo que comprometio el servicio
+title: "[BUG]: "
+labels: ["bug", "pending-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¡Gracias por reportar este error! Por favor, ayudanos a arreglarlo.
+  - type: textarea
+    id: description
+    attributes:
+      label: ¿Que paso?
+      description: Describe el error con el mayor detalle posible. Que estabas haciendo cuando paso?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: ¿Que deberia haber pasado?
+      description: Describe que pensabas que sucederia si el proyecto estuviese funcionando bien.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      description: Lista los pasos exactos para replicar el error.
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Problemas de sistema (OS)
+      description: En que plataforma paso el error? (Especificamente el dispositivo que lo detecto).
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other (specify in the description)
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots_logs
+    attributes:
+      label: Capturas de pantalla o logs
+      description: Arrastra y deja caer capturas, o de ser posible, los logs de error.

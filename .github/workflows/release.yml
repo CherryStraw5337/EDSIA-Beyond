@@ -1,0 +1,36 @@
+name: Auto Release y Versionado
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+permissions: 
+  contents: 
+    - write
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Actualizar versión y crear Release
+        # Aquí se usaría una herramienta como python-semantic-release
+        # para leer los commits, actualizar pyproject.toml y crear el tag en GitHub.
+        run: |
+          echo "Ejecutando semantic release para actualizar pyproject.toml basado en el PR"
+          pip install python-semantic-release
+          semantic-release version
+          semantic-release publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

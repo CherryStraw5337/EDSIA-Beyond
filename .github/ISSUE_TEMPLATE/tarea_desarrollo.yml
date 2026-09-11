@@ -1,0 +1,31 @@
+name: Tarea de Desarrollo / Issue
+description: Crea una nueva tarea estructurada para el Backlog
+title: "[Dev]: "
+labels: ["dev work"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema que resuelve / Historia de Usuario
+      description: Describe brevemente qué problema soluciona esta tarea, o redacta la User Story.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Criterios de Aceptación
+      description: Lista los requerimientos exactos para que este Issue se considere terminado.
+    validations:
+      required: true
+  - type: dropdown
+    id: moscow
+    attributes:
+      label: Prioridad MoSCoW
+      description: Define la urgencia de esta tarea según el método MoSCoW.
+      options:
+        - "Must have (Debe tener)"
+        - "Should have (Debería tener)"
+        - "Could have (Podría tener)"
+        - "Won't have (No tendrá por ahora)"
+    validations:
+      required: true
