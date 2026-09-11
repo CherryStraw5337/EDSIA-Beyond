@@ -1,0 +1,30 @@
+name: Propuesta (Con Entregable)
+description: Tienes algún cambio listo que proponer.
+title: "[PROPOSAL]: "
+labels: ["proposal", "pending-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¡Increible! Gracias por traer un entregable para el proyecto. Llena los específicos para poder integrarlo.
+  - type: textarea
+    id: deliverable
+    attributes:
+      label: Qué estás entregando?
+      description: Describe tu entregable.
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link al recurso o Pull Request
+      description: Si es código, pon el link al PR. Si es un recurso, pon el link a donde esté almacenado.
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Detalles de implementación
+      description: En qué parte del proyecto debería ir?
+    validations:
+      required: true

@@ -1,0 +1,24 @@
+name: Suggestion
+description: Escribe una sugerencia para mejorar el proyecto.
+title: "[SUGGESTION]: "
+labels: ["suggestion", "pending-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¡Gracias por querer mejorar SensorHub! Porfavor detalla tu idea lo mas posible.
+  - type: textarea
+    id: description
+    attributes:
+      label: Suggestion Description
+      description: Que ideas tienes en mente?
+      placeholder: Creo que reading_service deberia...
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Por que deberiamos implementarlos?
+      description: Que valor o beneficio le aporta al proyecto?
+    validations:
+      required: true

@@ -1,0 +1,12 @@
+name: Convo/Query
+description: Tienes una duda sobre el proyecto o solo quieres comentar algo.
+title: "[CONVO]: "
+labels: ["conversation"]
+body:
+  - type: textarea
+    id: topic
+    attributes:
+      label: Tema
+      description: Qué te gustaría preguntar o hablar de?
+    validations:
+      required: true
