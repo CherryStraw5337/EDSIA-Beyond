@@ -1,6 +1,6 @@
 import random
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 
@@ -17,7 +17,7 @@ def generar_lectura(punto_id, energia_acumulada):
     energia_acumulada = round(energia_acumulada + (potencia / 3600), 4)
 
     payload = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "voltaje": voltaje,
         "corriente": corriente,
         "potencia": potencia,
