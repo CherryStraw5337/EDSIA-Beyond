@@ -1,2 +1,2 @@
-# EDSIA-Beyond
-(Texto momentaneo) Repositorio del proyecto del curso EDSIA (nombre pendiente)
+# Solaris Monitoring
+(Texto momentaneo) Repositorio del proyecto del curso EDSIA
